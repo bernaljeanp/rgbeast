@@ -163,10 +163,17 @@ def hide_window_from_taskbar() -> None:
     except OSError:
         return
     kwin = ("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting")
+    # Nombre único por arranque: reutilizar el anterior falla si KWin aún lo
+    # está descargando (y la ventana volvería a la barra).
     D.call(kwin, "unloadScript", "rigcore-barra", bus="session")
-    ok, sid = D.call(kwin, "loadScript", str(script), "rigcore-barra", bus="session")
-    if ok and isinstance(sid, int) and sid >= 0:
-        D.call(("org.kde.KWin", f"/Scripting/Script{sid}", "org.kde.kwin.Script"), "run", bus="session")
+    name = f"rigcore-barra-{os.getpid()}"
+    for _ in range(5):
+        ok, sid = D.call(kwin, "loadScript", str(script), name, bus="session")
+        if ok and isinstance(sid, int) and sid >= 0:
+            D.call(("org.kde.KWin", f"/Scripting/Script{sid}", "org.kde.kwin.Script"), "run", bus="session")
+            return
+        import time
+        time.sleep(0.4)
 
 
 class Tray(QObject):
