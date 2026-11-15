@@ -137,11 +137,44 @@ def tray_icon() -> QIcon:
     return icon
 
 
+def hide_window_from_taskbar() -> None:
+    """Rigcore vive en la bandeja: su ventana no va en la barra de tareas.
+
+    En Wayland, KWin no deja que la app lo pida, así que el proceso de la
+    bandeja carga (solo durante la sesión) un script de KWin que quita la
+    ventana de la barra y del paginador cada vez que aparece. Fuera de KDE no
+    hace nada.
+    """
+    if "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", "").upper():
+        return
+    from . import dbus as D
+
+    app_id = os.environ.get("FLATPAK_ID", "rigcore")
+    script = RUNTIME / "kwin-fuera-de-la-barra.js"
+    try:
+        RUNTIME.mkdir(parents=True, exist_ok=True)
+        script.write_text(
+            "function quitar(w) {\n"
+            f'  if (w && w.resourceClass == "{app_id.lower()}") {{ w.skipTaskbar = true; w.skipPager = true; }}\n'
+            "}\n"
+            "workspace.windowList().forEach(quitar);\n"
+            "workspace.windowAdded.connect(quitar);\n"
+        )
+    except OSError:
+        return
+    kwin = ("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting")
+    D.call(kwin, "unloadScript", "rigcore-barra", bus="session")
+    ok, sid = D.call(kwin, "loadScript", str(script), "rigcore-barra", bus="session")
+    if ok and isinstance(sid, int) and sid >= 0:
+        D.call(("org.kde.KWin", f"/Scripting/Script{sid}", "org.kde.kwin.Script"), "run", bus="session")
+
+
 class Tray(QObject):
     def __init__(self, backend, windows: WindowController) -> None:
         super().__init__()
         self.b = backend
         self.windows = windows
+        hide_window_from_taskbar()
         self.icon = QSystemTrayIcon(tray_icon())
         self.icon.setToolTip("Rigcore")
         self.icon.activated.connect(self._activated)
