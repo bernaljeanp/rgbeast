@@ -69,13 +69,25 @@ ApplicationWindow {
                 RowLayout {
                     anchors { fill: parent; leftMargin: T.pad; rightMargin: 0 }
                     spacing: 0
-                    // Marca: R, G y B en sus colores; EAST en el tono del texto.
+                    // Marca: R, G y B recorren el arcoíris despacio, separadas un tercio
+                    // de vuelta (al empezar cada vuelta son rojo, verde y azul).
+                    // EAST va en el tono del texto. Se para con la ventana oculta.
                     Row {
+                        id: brand
+                        property real hue: 0
+                        NumberAnimation on hue {
+                            from: 0; to: 1
+                            duration: T.logoCycle
+                            loops: Animation.Infinite
+                            running: win.visible && win.visibility !== Window.Minimized
+                        }
                         Repeater {
-                            model: [["R", T.logoR], ["G", T.logoG], ["B", T.logoB], ["EAST", T.ink]]
+                            model: ["R", "G", "B", "EAST"]
                             Text {
-                                text: modelData[0]
-                                color: modelData[1]
+                                text: modelData
+                                color: index < 3
+                                       ? Qt.hsla((brand.hue + index / 3) % 1, T.logoSat, T.logoLight, 1)
+                                       : T.ink
                                 font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
                             }
                         }

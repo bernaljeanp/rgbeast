@@ -21,10 +21,10 @@ var red      = "#FF5A45"   // crítico
 var steel    = "#7FA6BC"   // segunda serie de datos (GPU)
 var ok       = "#8FCB8F"   // estado correcto (muy contenido)
 
-// Marca: las letras R, G y B del logotipo
-var logoR    = "#FF4D5E"
-var logoG    = "#3DDC84"
-var logoB    = "#3D8BFF"
+// Marca: arcoíris de las letras R, G y B del logotipo
+var logoSat   = 0.85     // saturación (HSL)
+var logoLight = 0.62     // luminosidad (HSL): viva sin deslumbrar sobre grafito
+var logoCycle = 12000    // ms por vuelta completa
 
 // Tipografía
 var sans     = "IBM Plex Sans Condensed"
