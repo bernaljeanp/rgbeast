@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rgbeast"
-version = "0.2.0"
+version = "0.2.1"
 description = "Centro de control para portátiles gaming en Linux: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
 readme = "README.md"
 license = "GPL-3.0-only"

@@ -29,7 +29,7 @@ for p in rgbeast rgbeast-git; do
   git clone ssh://aur@aur.archlinux.org/$p.git /tmp/aur-$p
   cp packaging/arch/$p/PKGBUILD packaging/arch/$p/rgbeast.install packaging/arch/$p/.SRCINFO /tmp/aur-$p/
   git -C /tmp/aur-$p add PKGBUILD rgbeast.install .SRCINFO
-  git -C /tmp/aur-$p commit -m "$p 0.2.0"
+  git -C /tmp/aur-$p commit -m "$p 0.2.1"
   git -C /tmp/aur-$p push origin HEAD:master
 done
 ```
