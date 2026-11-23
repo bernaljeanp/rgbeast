@@ -1,6 +1,6 @@
 pkgbase = rgbeast
 	pkgdesc = Control center for gaming laptops: temperatures, fans, performance modes, battery, lighting and game profiles
-	pkgver = 0.1.1
+	pkgver = 0.2.0
 	pkgrel = 1
 	url = https://github.com/bernaljeanp/rgbeast
 	install = rgbeast.install
@@ -21,7 +21,7 @@ pkgbase = rgbeast
 	optdepends = nvidia-utils: NVIDIA GPU readings
 	conflicts = rigcore
 	replaces = rigcore
-	source = rgbeast-0.1.1.tar.gz::https://github.com/bernaljeanp/rgbeast/archive/v0.1.1/rgbeast-0.1.1.tar.gz
-	sha256sums = 65353e98d234c74a21e4c2b24c13f3e411d025d6ff47b1137430860ad18c4e7f
+	source = rgbeast-0.2.0.tar.gz::https://github.com/bernaljeanp/rgbeast/archive/v0.2.0/rgbeast-0.2.0.tar.gz
+	sha256sums = 32828c3093f3247a7f8148fbf33adc8d8b12dcdf19d1b81564f0a9b814c431f3
 
 pkgname = rgbeast
