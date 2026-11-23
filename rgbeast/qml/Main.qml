@@ -69,10 +69,16 @@ ApplicationWindow {
                 RowLayout {
                     anchors { fill: parent; leftMargin: T.pad; rightMargin: 0 }
                     spacing: 0
-                    Text {
-                        text: qsTr("RGBEAST")
-                        color: T.ink
-                        font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
+                    // Marca: R, G y B en sus colores; EAST en el tono del texto.
+                    Row {
+                        Repeater {
+                            model: [["R", T.logoR], ["G", T.logoG], ["B", T.logoB], ["EAST", T.ink]]
+                            Text {
+                                text: modelData[0]
+                                color: modelData[1]
+                                font { family: T.sans; pixelSize: 20; weight: Font.DemiBold }
+                            }
+                        }
                     }
                     Text {
                         Layout.leftMargin: 14

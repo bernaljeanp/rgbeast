@@ -21,6 +21,11 @@ var red      = "#FF5A45"   // crítico
 var steel    = "#7FA6BC"   // segunda serie de datos (GPU)
 var ok       = "#8FCB8F"   // estado correcto (muy contenido)
 
+// Marca: las letras R, G y B del logotipo
+var logoR    = "#FF4D5E"
+var logoG    = "#3DDC84"
+var logoB    = "#3D8BFF"
+
 // Tipografía
 var sans     = "IBM Plex Sans Condensed"
 var mono     = "IBM Plex Mono"
