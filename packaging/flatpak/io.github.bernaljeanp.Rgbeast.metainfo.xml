@@ -54,6 +54,9 @@
     <keyword>gaming</keyword>
   </keywords>
   <releases>
+    <release version="0.2.0" date="2026-11-23">
+      <description><p>New name: RGBEAST (formerly Rigcore). Settings are migrated automatically. The NVIDIA GPU is no longer kept awake just to read its temperature, and the window no longer shows up in the taskbar when opened from the tray.</p></description>
+    </release>
     <release version="0.1.1" date="2026-11-11">
       <description><p>New name: RGBEAST (formerly Vórtice), with a new icon. Settings are migrated automatically.</p></description>
     </release>

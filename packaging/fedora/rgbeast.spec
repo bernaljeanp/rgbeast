@@ -3,7 +3,7 @@
 %global __requires_exclude ^python3(\\.[0-9]+)?dist\\(pyside6-essentials\\)
 
 Name:           rgbeast
-Version:        0.1.1
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Centro de control para portátiles gaming en Linux
 
@@ -80,6 +80,11 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/rgbeast.desktop
 %{_datadir}/icons/hicolor/scalable/status/rgbeast-symbolic.svg
 
 %changelog
+* Mon Nov 23 2026 bernaljeanp <316348178+bernaljeanp@users.noreply.github.com> - 0.2.0-1
+- Nuevo nombre: RGBEAST (antes Rigcore); la configuración se migra sola
+- La gráfica NVIDIA ya no se mantiene despierta solo para leer su temperatura
+- La ventana ya no aparece en la barra de tareas al abrirse desde la bandeja
+
 * Wed Nov 11 2026 bernaljeanp <316348178+bernaljeanp@users.noreply.github.com> - 0.1.1-1
 - Nuevo nombre: RGBEAST (antes Vórtice) e icono nuevo
 
