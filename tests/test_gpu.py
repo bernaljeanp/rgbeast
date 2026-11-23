@@ -101,3 +101,94 @@ class NombresTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeNvml:
+    """Sustituto de libnvidia-ml: cuenta inits/shutdowns y lecturas."""
+
+    def __init__(self):
+        self.inits = self.shutdowns = self.reads = 0
+
+    def nvmlInit_v2(self):
+        self.inits += 1
+        return 0
+
+    def nvmlShutdown(self):
+        self.shutdowns += 1
+        return 0
+
+    def nvmlDeviceGetHandleByIndex_v2(self, i, ref):
+        return 0
+
+    def nvmlDeviceGetName(self, h, buf, n):
+        buf.value = b"NVIDIA GeForce RTX 5070 Laptop GPU"
+        return 0
+
+    def nvmlDeviceGetTemperature(self, h, s, ref):
+        self.reads += 1
+        ref._obj.value = 55
+        return 0
+
+    def __getattr__(self, name):  # resto de consultas: sin dato
+        return lambda *a: 1
+
+
+class NvidiaTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = self.tmp.name
+        write(self.root, "usr/share/hwdata/pci.ids",
+              PCI_IDS + "10de  NVIDIA Corporation\n\t2d58  GB206M [GeForce RTX 5070 Max-Q / Mobile]\n")
+        base = "sys/class/drm/card0/device"
+        write(self.root, f"{base}/vendor", "0x10de")
+        write(self.root, f"{base}/device", "0x2d58")
+        self.status = os.path.join(self.root, base, "power/runtime_status")
+        write(self.root, f"{base}/power/runtime_status", "active")
+        os.makedirs(os.path.join(self.root, "proc"))
+        self.fake = FakeNvml()
+        self._cdll = gpu.ctypes.CDLL
+        gpu.ctypes.CDLL = lambda name: self.fake
+
+    def tearDown(self):
+        gpu.ctypes.CDLL = self._cdll
+        self.tmp.cleanup()
+
+    def user(self, pid, target):
+        fd = os.path.join(self.root, "proc", str(pid), "fd")
+        os.makedirs(fd, exist_ok=True)
+        os.symlink(target, os.path.join(fd, str(len(os.listdir(fd)))))
+
+    def gpu(self):
+        (g,) = gpu.detect(self.root)
+        g.USERS_EVERY = 0
+        return g
+
+    def test_nombre_y_no_retiene_nvml(self):
+        g = self.gpu()
+        self.assertEqual(g.name, "RTX 5070 Laptop GPU")
+        self.assertEqual(self.fake.inits, self.fake.shutdowns)
+
+    def test_dormida_usa_nombre_pci_sin_tocarla(self):
+        write(self.root, "sys/class/drm/card0/device/power/runtime_status", "suspended")
+        g = self.gpu()
+        self.assertEqual(g.name, "RTX 5070 Max-Q")
+        self.assertEqual(self.fake.inits, 0)
+        self.assertEqual(g.sample(), {"asleep": True})
+
+    def test_sin_otros_usuarios_no_consulta(self):
+        self.user(9001, "/dev/nvidiactl")      # no es la gráfica en sí
+        self.user(9002, "/dev/nvidia-uvm")
+        g = self.gpu()
+        self.assertEqual(g.sample(), {"asleep": True})
+        self.assertEqual(self.fake.reads, 0)
+        self.assertEqual(self.fake.inits, self.fake.shutdowns)
+
+    def test_con_juego_consulta_y_al_cerrar_suelta(self):
+        g = self.gpu()
+        self.user(9003, "/dev/nvidia0")
+        self.assertEqual(g.sample(), {"temp": 55})
+        self.assertGreater(self.fake.inits, self.fake.shutdowns)   # abierta
+        import shutil
+        shutil.rmtree(os.path.join(self.root, "proc", "9003"))
+        self.assertEqual(g.sample(), {"asleep": True})
+        self.assertEqual(self.fake.inits, self.fake.shutdowns)     # soltada

@@ -90,21 +90,76 @@ class _NvUtil(ctypes.Structure):
 
 
 class NvidiaGpu(Gpu):
+    """NVML mantiene la gráfica despierta mientras está abierta y cada consulta
+    cuenta como actividad. En un portátil híbrido eso impide que se apague
+    (RTD3). Solo se consulta mientras otro proceso la usa (un juego, un
+    compositor en modo dedicado...); si nadie la usa, se cierra NVML y se informa
+    como dormida para que el driver pueda apagarla."""
+
     kind = "nvidia"
     discrete = True
+    USERS_EVERY = 5.0  # segundos entre comprobaciones de quién usa la gráfica
 
-    def __init__(self, device_dir: str) -> None:
+    def __init__(self, device_dir: str, root: str = "/") -> None:
         super().__init__(device_dir)
         self.ok = False
         self._init = False
         self.name = "NVIDIA"
+        self._proc = os.path.join(root, "proc")
+        self._users_at = 0.0
+        self._in_use = False
+        vendor, device = _read(f"{device_dir}/vendor"), _read(f"{device_dir}/device")
+        if vendor and device:
+            pci = pci_name(vendor, device, root)
+            if pci:
+                self.name = _short(pci).replace("GeForce ", "")
         try:
             self.lib = ctypes.CDLL("libnvidia-ml.so.1")
         except OSError:
             return
         self.ok = True
-        if not self.asleep():
-            self._open()
+        if not self.asleep() and self._open():
+            self._close()  # solo para leer el nombre; no la retenemos
+
+    def _other_users(self) -> bool:
+        """¿Algún otro proceso tiene abierta /dev/nvidiaN? (sin tocar la gráfica)"""
+        me = str(os.getpid())
+        try:
+            pids = [p for p in os.listdir(self._proc) if p.isdigit() and p != me]
+        except OSError:
+            return True  # sin /proc no se puede saber: comportamiento anterior
+        for pid in pids:
+            fd_dir = f"{self._proc}/{pid}/fd"
+            try:
+                fds = os.listdir(fd_dir)
+            except OSError:
+                continue
+            for fd in fds:
+                try:
+                    target = os.readlink(f"{fd_dir}/{fd}")
+                except OSError:
+                    continue
+                if target.startswith("/dev/nvidia") and target[11:].isdigit():
+                    return True
+        return False
+
+    def in_use(self) -> bool:
+        now = time.monotonic()
+        if now - self._users_at >= self.USERS_EVERY:
+            self._users_at = now
+            self._in_use = self._other_users()
+        return self._in_use
+
+    def sample(self) -> dict:
+        if self.asleep() or not self.in_use():
+            self._close()
+            return {"asleep": True}
+        return self.read()
+
+    def _close(self) -> None:
+        if self._init:
+            self.lib.nvmlShutdown()
+            self._init = False
 
     def _open(self) -> bool:
         if self._init:
@@ -113,11 +168,12 @@ class NvidiaGpu(Gpu):
             return False
         self.handle = ctypes.c_void_p()
         if self.lib.nvmlDeviceGetHandleByIndex_v2(0, ctypes.byref(self.handle)) != 0:
+            self.lib.nvmlShutdown()
             return False
-        buf = ctypes.create_string_buffer(96)
-        self.lib.nvmlDeviceGetName(self.handle, buf, 96)
-        self.name = buf.value.decode(errors="replace").replace("NVIDIA GeForce ", "")
         self._init = True
+        buf = ctypes.create_string_buffer(96)
+        if self.lib.nvmlDeviceGetName(self.handle, buf, 96) == 0 and buf.value:
+            self.name = buf.value.decode(errors="replace").replace("NVIDIA GeForce ", "")
         return True
 
     def read(self) -> dict:
@@ -240,7 +296,7 @@ def detect(root: str = "/") -> list[Gpu]:
         dev = f"{card}/device"
         vendor = (_read(f"{dev}/vendor") or "").lower()
         if vendor == "0x10de":
-            g = NvidiaGpu(dev)
+            g = NvidiaGpu(dev, root)
             if g.ok:
                 gpus.append(g)
         elif vendor == "0x1002":
