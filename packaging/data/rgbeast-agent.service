@@ -1,0 +1,11 @@
+[Unit]
+Description=RGBEAST - perfiles por juego
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/rgbeast-agent
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

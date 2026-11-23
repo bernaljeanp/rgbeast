@@ -2,7 +2,7 @@
 
 import unittest
 
-from rigcore import fancurve as fc
+from rgbeast import fancurve as fc
 
 CURVE = [[50, 0], [70, 0], [80, 40], [90, 100]]
 

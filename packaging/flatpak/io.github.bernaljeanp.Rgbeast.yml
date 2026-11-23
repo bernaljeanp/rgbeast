@@ -1,0 +1,37 @@
+# Flatpak de RGBEAST (edición con sandbox).
+# Sin perfiles por juego (el sandbox no ve los procesos del sistema) ni teclas
+# globales; el servicio de hardware se instala aparte (install.sh o paquete).
+app-id: io.github.bernaljeanp.Rgbeast
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+base: io.qt.PySide.BaseApp
+base-version: '6.11'
+command: rgbeast
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Gráfica (NVML) y controladores de luces USB (hidraw), como OpenRGB.
+  - --device=all
+  # Modos de rendimiento, servicio de hardware de RGBEAST y perfil de tuned.
+  - --system-talk-name=net.hadess.PowerProfiles
+  - --system-talk-name=org.freedesktop.UPower.PowerProfiles
+  - --system-talk-name=io.github.bernaljeanp.Rgbeast.Helper
+  - --system-talk-name=com.redhat.tuned
+  # Icono en la bandeja (StatusNotifierItem).
+  - --talk-name=org.kde.StatusNotifierWatcher
+modules:
+  - name: rgbeast
+    buildsystem: simple
+    build-commands:
+      # Shaders compilados con el Qt del runtime.
+      - QSB=$(command -v qsb || ls /usr/lib/*/qt6/bin/qsb /usr/lib/qt6/bin/qsb 2>/dev/null | head -1) sh tools/build_shaders.sh
+      - pip3 install --no-deps --no-build-isolation --prefix=/app .
+      - install -Dm644 packaging/flatpak/io.github.bernaljeanp.Rgbeast.desktop /app/share/applications/io.github.bernaljeanp.Rgbeast.desktop
+      - install -Dm644 packaging/flatpak/io.github.bernaljeanp.Rgbeast.metainfo.xml /app/share/metainfo/io.github.bernaljeanp.Rgbeast.metainfo.xml
+      - install -Dm644 rgbeast/qml/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.bernaljeanp.Rgbeast.svg
+    sources:
+      - type: dir
+        path: ../..
+        skip: [.venv, build, .git, .flatpak-builder, packaging/flatpak/build-dir, packaging/flatpak/repo]

@@ -1,11 +1,11 @@
-"""Genera el icono de Rigcore: mando con una turbina en lugar de la cruceta.
+"""Genera el icono de RGBEAST: mando con una turbina en lugar de la cruceta.
 
 El mando dice "gaming"; la turbina, que la app controla el equipo (ventiladores,
 modos, luces). Solo el mando, sin placa: blanco con un contorno grafito fino
 (para que se vea también sobre fondos claros) y rosa de señal.
 Uso:
-    python tools/make_icon.py > rigcore/qml/icon.svg
-    python tools/make_icon.py --symbolic > rigcore/qml/icon-symbolic.svg
+    python tools/make_icon.py > rgbeast/qml/icon.svg
+    python tools/make_icon.py --symbolic > rgbeast/qml/icon-symbolic.svg
 """
 
 import math

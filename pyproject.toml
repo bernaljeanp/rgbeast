@@ -3,7 +3,7 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rigcore"
+name = "rgbeast"
 version = "0.1.1"
 description = "Centro de control para portátiles gaming en Linux: temperaturas, ventiladores, modos, batería, luces y perfiles por juego"
 readme = "README.md"
@@ -24,18 +24,19 @@ classifiers = [
 dependencies = ["PySide6-Essentials>=6.12"]
 
 [project.urls]
-Homepage = "https://github.com/bernaljeanp/rigcore"
-Issues = "https://github.com/bernaljeanp/rigcore/issues"
+Homepage = "https://github.com/bernaljeanp/rgbeast"
+Issues = "https://github.com/bernaljeanp/rgbeast/issues"
 
 [project.scripts]
-rigcore = "rigcore.app:main"
-rigcore-agent = "rigcore.agent:main"
+rgbeast = "rgbeast.app:main"
+rgbeast-agent = "rgbeast.agent:main"
 
 [tool.setuptools]
-# qml/, fonts/ y shaders/ son solo datos, pero setuptools quiere verlas declaradas.
-packages = ["rigcore", "rigcore.qml", "rigcore.fonts", "rigcore.shaders"]
+# qml/, fonts/, shaders/ e i18n/ son solo datos, pero setuptools quiere verlas declaradas.
+packages = ["rgbeast", "rgbeast.qml", "rgbeast.fonts", "rgbeast.shaders", "rgbeast.i18n"]
 
 [tool.setuptools.package-data]
-"rigcore.qml" = ["*"]
-"rigcore.fonts" = ["*"]
-"rigcore.shaders" = ["*"]
+"rgbeast.qml" = ["*"]
+"rgbeast.fonts" = ["*"]
+"rgbeast.shaders" = ["*"]
+"rgbeast.i18n" = ["*.qm"]

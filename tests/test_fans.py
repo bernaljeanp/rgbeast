@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from rigcore import fans
+from rgbeast import fans
 
 
 def w(root, rel, value="", mode=0o644):
@@ -162,7 +162,7 @@ class MsiTests(Base):
 
 class MsiLecturaTests(Base):
     def test_velocidad_en_porcentaje(self):
-        from rigcore import hardware
+        from rgbeast import hardware
         w(self.root, "/sys/devices/platform/msi-ec/cpu/realtime_fan_speed", "45")
         w(self.root, "/sys/devices/platform/msi-ec/gpu/realtime_fan_speed", "60")
         cpu, gpu = hardware.msi_fans(self.root)

@@ -1,16 +1,16 @@
 #!/bin/sh
-# Instala (o desinstala con --uninstall) el servicio privilegiado de Rigcore.
+# Instala (o desinstala con --uninstall) el servicio privilegiado de RGBEAST.
 # Uso: sudo ./helper/install.sh   |   sudo ./helper/install.sh --uninstall
 set -eu
 
 [ "$(id -u)" -eq 0 ] || { echo "Ejecuta con sudo." >&2; exit 1; }
 SRC=$(dirname "$(readlink -f "$0")")
 
-LIBEXEC=/usr/local/libexec/rigcore
-UNIT=/etc/systemd/system/rigcore-helper.service
-POLICY=/etc/dbus-1/system.d/io.github.bernaljeanp.Rigcore.Helper.conf
+LIBEXEC=/usr/local/libexec/rgbeast
+UNIT=/etc/systemd/system/rgbeast-helper.service
+POLICY=/etc/dbus-1/system.d/io.github.bernaljeanp.Rgbeast.Helper.conf
 
-HWDB=/etc/udev/hwdb.d/70-rigcore-alienware.hwdb
+HWDB=/etc/udev/hwdb.d/70-rgbeast-alienware.hwdb
 reload_keys() {
     systemd-hwdb update
     # Reaplica el mapa de teclas a los teclados integrados sin reiniciar.
@@ -19,12 +19,12 @@ reload_keys() {
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
-    systemctl disable --now rigcore-helper.service 2>/dev/null || true
+    systemctl disable --now rgbeast-helper.service 2>/dev/null || true
     rm -f "$UNIT" "$POLICY"
     if [ -f "$HWDB" ]; then rm -f "$HWDB"; reload_keys; fi
     rm -rf "$LIBEXEC"
     systemctl daemon-reload
-    echo "Servicio de Rigcore desinstalado."
+    echo "Servicio de RGBEAST desinstalado."
     exit 0
 fi
 
@@ -45,22 +45,32 @@ if [ -e /etc/systemd/system/vortice-helper.service ] || [ -d /usr/local/libexec/
         rm -f /etc/udev/hwdb.d/70-vortice-alienware.hwdb
     fi
 fi
-if [ -d /var/lib/vortice ] && [ ! -e /var/lib/rigcore ]; then
-    mv /var/lib/vortice /var/lib/rigcore
+# Después se llamó Rigcore: mismo tratamiento, y sus datos (luces, curva) se conservan.
+if [ -e /etc/systemd/system/rigcore-helper.service ] || [ -d /usr/local/libexec/rigcore ]; then
+    echo "Retirando el servicio antiguo (Rigcore)..."
+    systemctl disable --now rigcore-helper.service 2>/dev/null || true
+    rm -f /etc/systemd/system/rigcore-helper.service /etc/dbus-1/system.d/io.github.bernaljeanp.Rigcore.Helper.conf
+    rm -rf /usr/local/libexec/rigcore
+    rm -f /etc/udev/hwdb.d/70-rigcore-alienware.hwdb
 fi
+for old in rigcore vortice; do
+    if [ -d "/var/lib/$old" ] && [ ! -e /var/lib/rgbeast ]; then
+        mv "/var/lib/$old" /var/lib/rgbeast
+    fi
+done
 # Copias propiedad de root: el código privilegiado no se ejecuta desde /home.
 install -d -o root -g root -m 0755 "$LIBEXEC"
-install -o root -g root -m 0755 "$SRC/rigcore-helper" "$LIBEXEC/rigcore-helper"
-install -o root -g root -m 0644 "$SRC/../rigcore/lights.py" "$LIBEXEC/lights.py"
-install -o root -g root -m 0644 "$SRC/../rigcore/fancurve.py" "$LIBEXEC/fancurve.py"
-install -o root -g root -m 0644 "$SRC/../rigcore/fans.py" "$LIBEXEC/fans.py"
+install -o root -g root -m 0755 "$SRC/rgbeast-helper" "$LIBEXEC/rgbeast-helper"
+install -o root -g root -m 0644 "$SRC/../rgbeast/lights.py" "$LIBEXEC/lights.py"
+install -o root -g root -m 0644 "$SRC/../rgbeast/fancurve.py" "$LIBEXEC/fancurve.py"
+install -o root -g root -m 0644 "$SRC/../rgbeast/fans.py" "$LIBEXEC/fans.py"
 
 # Zenit (instalación independiente) también controla las luces: si está, se retira
 # con la misma comprobación que usa su propio desinstalador. Sus preferencias
 # en /var/lib/zenit se conservan.
 ZUNIT=/etc/systemd/system/zenit.service
 if [ -f "$ZUNIT" ] && [ ! -L "$ZUNIT" ] && grep -qx 'ExecStart=/usr/bin/python3 /var/opt/zenit/zenit.py demonio\( --solo-luces\)\?' "$ZUNIT"; then
-    echo "Retirando el servicio de Zenit para que no compita con Rigcore por las luces..."
+    echo "Retirando el servicio de Zenit para que no compita con RGBEAST por las luces..."
     systemctl disable --now zenit.service || true
     rm -f -- "$ZUNIT" /var/opt/zenit/zenit.py
     rmdir /var/opt/zenit 2>/dev/null || true
@@ -71,26 +81,26 @@ BLOCKS=""
 for g in wheel sudo admin; do
     getent group "$g" >/dev/null || continue
     BLOCKS="$BLOCKS  <policy group=\"$g\">
-    <allow send_destination=\"io.github.bernaljeanp.Rigcore.Helper\" send_interface=\"io.github.bernaljeanp.Rigcore.Helper1\"/>
-    <allow send_destination=\"io.github.bernaljeanp.Rigcore.Helper\" send_interface=\"org.freedesktop.DBus.Introspectable\"/>
-    <allow send_destination=\"io.github.bernaljeanp.Rigcore.Helper\" send_interface=\"org.freedesktop.DBus.Properties\"/>
-    <allow send_destination=\"io.github.bernaljeanp.Rigcore.Helper\" send_interface=\"org.freedesktop.DBus.Peer\"/>
+    <allow send_destination=\"io.github.bernaljeanp.Rgbeast.Helper\" send_interface=\"io.github.bernaljeanp.Rgbeast.Helper1\"/>
+    <allow send_destination=\"io.github.bernaljeanp.Rgbeast.Helper\" send_interface=\"org.freedesktop.DBus.Introspectable\"/>
+    <allow send_destination=\"io.github.bernaljeanp.Rgbeast.Helper\" send_interface=\"org.freedesktop.DBus.Properties\"/>
+    <allow send_destination=\"io.github.bernaljeanp.Rgbeast.Helper\" send_interface=\"org.freedesktop.DBus.Peer\"/>
   </policy>
 "
 done
 [ -n "$BLOCKS" ] || { echo "No hay grupo de administradores (wheel/sudo/admin)." >&2; exit 1; }
 TMP=$(mktemp)
 awk -v blocks="$BLOCKS" '{ if ($0 ~ /@ADMIN_POLICIES@/) printf "%s", blocks; else print }' \
-    "$SRC/io.github.bernaljeanp.Rigcore.Helper.conf" > "$TMP"
+    "$SRC/io.github.bernaljeanp.Rgbeast.Helper.conf" > "$TMP"
 install -o root -g root -m 0644 "$TMP" "$POLICY"
 rm -f "$TMP"
-sed "s|@LIBEXECDIR@|$LIBEXEC|g" "$SRC/rigcore-helper.service" > "$UNIT"
+sed "s|@LIBEXECDIR@|$LIBEXEC|g" "$SRC/rgbeast-helper.service" > "$UNIT"
 chown root:root "$UNIT"; chmod 0644 "$UNIT"
 
 # Teclas especiales de Alienware (F6 Boost, F7 Sigilo): solo en equipos Alienware;
 # la regla limita además el modelo, así que en otros no cambia nada.
 if [ "$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null)" = "Alienware" ]; then
-    install -o root -g root -m 0644 "$SRC/70-rigcore-alienware.hwdb" "$HWDB"
+    install -o root -g root -m 0644 "$SRC/70-rgbeast-alienware.hwdb" "$HWDB"
     reload_keys
 fi
 command -v restorecon >/dev/null && restorecon -R "$LIBEXEC" "$UNIT" "$POLICY" || true
@@ -98,9 +108,9 @@ command -v restorecon >/dev/null && restorecon -R "$LIBEXEC" "$UNIT" "$POLICY" |
 systemctl reload dbus.service 2>/dev/null || busctl call org.freedesktop.DBus \
     /org/freedesktop/DBus org.freedesktop.DBus ReloadConfig >/dev/null
 systemctl daemon-reload
-systemctl enable --now rigcore-helper.service
-systemctl restart rigcore-helper.service
+systemctl enable --now rgbeast-helper.service
+systemctl restart rgbeast-helper.service
 sleep 1
-systemctl --no-pager --lines=5 status rigcore-helper.service
+systemctl --no-pager --lines=5 status rgbeast-helper.service
 echo
-echo "Listo. Servicio de Rigcore instalado y activo."
+echo "Listo. Servicio de RGBEAST instalado y activo."

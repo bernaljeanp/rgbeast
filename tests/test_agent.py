@@ -3,7 +3,7 @@
 import unittest
 from unittest import mock
 
-from rigcore import agent
+from rgbeast import agent
 
 
 class FakeSystem:

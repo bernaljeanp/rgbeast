@@ -7,7 +7,7 @@ import os
 import tempfile
 import unittest
 
-from rigcore import gpu
+from rgbeast import gpu
 
 PCI_IDS = """\
 # base mínima para las pruebas

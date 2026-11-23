@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/icono.svg" width="104" alt="Rigcore">
+  <img src="docs/icono.svg" width="104" alt="RGBEAST">
 </p>
 
-<h1 align="center">Rigcore</h1>
+<h1 align="center">RGBEAST</h1>
 
 <p align="center"><b>English</b> · <a href="README.es.md">Español</a></p>
 
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/en/panel.png" alt="Rigcore dashboard" width="900">
+  <img src="docs/en/panel.png" alt="RGBEAST dashboard" width="900">
 </p>
 
 > **Status: beta.** Thoroughly tested on an Alienware 16X Aurora running Bazzite (KDE Plasma, Wayland).
@@ -21,19 +21,19 @@
 > is tested against simulated sysfs trees, not on that hardware: your report helps the most (see *Contributing*).
 
 **Safety with manual fan control:** on fans with manual speed control (ThinkPad, Dell, HP Victus S),
-Rigcore forces maximum speed from 90 °C, hands control back to the firmware for a value of 0, and always
+RGBEAST forces maximum speed from 90 °C, hands control back to the firmware for a value of 0, and always
 when the service stops.
 
-## Why Rigcore
+## Why RGBEAST
 
 Laptop vendors don't ship their control apps for Linux, and the community has
 answered with dozens of separate tools: one per brand, sometimes one per model,
-many of them abandoned. Rigcore aims to be **one app for every brand**.
+many of them abandoned. RGBEAST aims to be **one app for every brand**.
 
-Instead of writing a driver per model, Rigcore uses the **standard kernel interfaces**
+Instead of writing a driver per model, RGBEAST uses the **standard kernel interfaces**
 (`hwmon`, `platform-profile`, `firmware-attributes`, `power_supply`, `hidraw`) and standard
 services (`power-profiles-daemon` / `tuned-ppd`, NVML). Every time the kernel adds support for
-a laptop, Rigcore benefits from it.
+a laptop, RGBEAST benefits from it.
 
 ## Features
 
@@ -73,7 +73,7 @@ a laptop, Rigcore benefits from it.
 | Battery charge limit | Dell / Alienware (`dell-wmi-sysman`), standard `charge_control_*` interface (ThinkPad, ASUS, Framework, MSI…), **Lenovo** (conservation mode) and **Acer** (80 % limit) |
 | Keyboard lighting | **Alienware / Dell G** (AW-ELC: color, breathe, aurora) · **ASUS TUF/ROG** (`kbd_rgb_mode`: color, breathe, cycle) · **Lenovo Legion 5/Pro, IdeaPad Gaming, LOQ** 2020–2024 (4 zones: color, breathe, cycle) · **Acer Predator/Nitro** with Linuwu-Sense (4 zones: color, breathe, wave) · **standard RGB** keyboards (multicolor LED: Tuxedo/Clevo, System76…) · **brightness** of any backlit keyboard |
 | Special keys | Alienware 16X Aurora (other models: contribute your key codes with `tools/scan_keys.py`) |
-| Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, Rigcore tells you) |
+| Performance modes | Distros with `power-profiles-daemon` or `tuned-ppd` (if you use TLP, RGBEAST tells you) |
 | Distros | systemd-based. Tested on Bazzite (Fedora) |
 
 ## Installation
@@ -82,12 +82,12 @@ a laptop, Rigcore benefits from it.
 into your user account and, if you want, it installs the hardware service asking for your password):
 
 ```sh
-git clone https://github.com/bernaljeanp/rigcore.git
-cd rigcore
+git clone https://github.com/bernaljeanp/rgbeast.git
+cd rgbeast
 ./install.sh            # ./install.sh --uninstall to remove it
 ```
 
-**Arch, CachyOS, EndeavourOS, Garuda:** `rigcore-git` package (AUR, coming soon).
+**Arch, CachyOS, EndeavourOS, Garuda:** `rgbeast-git` package (AUR, coming soon).
 **Fedora:** COPR repository (coming soon). Details in [packaging/](packaging/README.md).
 
 ### From source (development)
@@ -95,14 +95,14 @@ cd rigcore
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-./rigcore.sh               # window
-./rigcore.sh --bandeja     # tray (can be enabled at login from Settings)
+./rgbeast.sh               # window
+./rgbeast.sh --bandeja     # tray (can be enabled at login from Settings)
 ```
 
 ### Service for fans, battery and lighting
 
 Changing fan boost, curves, the charge limit, persistent lighting or the Fn lock needs
-administrator rights. Rigcore uses a minimal service that exposes **only** those operations,
+administrator rights. RGBEAST uses a minimal service that exposes **only** those operations,
 validates every value and only accepts system administrators (group `wheel`, `sudo` or `admin`):
 
 ```sh
@@ -110,7 +110,7 @@ pkexec "$PWD/helper/install.sh"              # install
 pkexec "$PWD/helper/install.sh" --uninstall  # uninstall
 ```
 
-The privileged code is copied to a root-owned directory (`/usr/local/libexec/rigcore/`, or the
+The privileged code is copied to a root-owned directory (`/usr/local/libexec/rgbeast/`, or the
 package's) and runs sandboxed by systemd: no network, no access to `/home`, the system read-only
 except `/sys`, and access only to `hidraw` devices. When it stops, fans go back to automatic. In the
 BIOS it can only change options from an allowlist (Fn lock). On Alienware laptops it also installs an
@@ -124,45 +124,45 @@ Requires the system's PyGObject (`python3-gobject` on Fedora, `python3-gi` on De
 ```sh
 .venv/bin/python -m unittest discover -s tests -v   # tests
 tools/measure.sh 20                                  # CPU usage of the window
-RIGCORE_SHOT=shot.png ./rigcore.sh --ventana         # automatic screenshot
-./rigcore.sh --ventana --pagina 2                    # open on a given page
-RIGCORE_LANG=en ./rigcore.sh --ventana               # force a language (es, en)
+RGBEAST_SHOT=shot.png ./rgbeast.sh --ventana         # automatic screenshot
+./rgbeast.sh --ventana --pagina 2                    # open on a given page
+RGBEAST_LANG=en ./rgbeast.sh --ventana               # force a language (es, en)
 
 # Simulate missing hardware to test the notices:
-RIGCORE_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness" ./rigcore.sh --ventana
+RGBEAST_SIMULATE="no-gpu,gpu-asleep,no-ppd,tlp,no-fans,no-battery,kbd-brightness" ./rgbeast.sh --ventana
 
 tools/build_shaders.sh                          # rebuild shaders (requirements-dev.txt)
 pkexec /usr/bin/python3 -I tools/scan_keys.py   # special key codes
-.venv/bin/python tools/i18n_update.py --check   # English translation (rigcore/i18n/rigcore_en.ts)
+.venv/bin/python tools/i18n_update.py --check   # English translation (rgbeast/i18n/rgbeast_en.ts)
 ```
 
-The source strings are in Spanish; the English translation lives in `rigcore/i18n/rigcore_en.ts`
+The source strings are in Spanish; the English translation lives in `rgbeast/i18n/rgbeast_en.ts`
 (editable with Qt Linguist or by hand).
 
 Layout:
 
 ```
-rigcore/hardware.py   sensor detection and readings (standard interfaces)
-rigcore/gpu.py        NVIDIA / AMD / Intel
-rigcore/lights.py     keyboard lighting per brand
-rigcore/fans.py       fan control per brand (boost, pwm, auto/max...)
-rigcore/fancurve.py   fan curves
-rigcore/agent.py      game profile agent (user service)
-rigcore/games.py      game library and configuration
-rigcore/tray.py       tray, single instance, keys
-rigcore/i18n.py       language (English translation in rigcore/i18n/)
-rigcore/app.py        Python ↔ QML bridge
-rigcore/qml/          user interface (Qt Quick)
-rigcore/shaders/      gauges in GLSL
+rgbeast/hardware.py   sensor detection and readings (standard interfaces)
+rgbeast/gpu.py        NVIDIA / AMD / Intel
+rgbeast/lights.py     keyboard lighting per brand
+rgbeast/fans.py       fan control per brand (boost, pwm, auto/max...)
+rgbeast/fancurve.py   fan curves
+rgbeast/agent.py      game profile agent (user service)
+rgbeast/games.py      game library and configuration
+rgbeast/tray.py       tray, single instance, keys
+rgbeast/i18n.py       language (English translation in rgbeast/i18n/)
+rgbeast/app.py        Python ↔ QML bridge
+rgbeast/qml/          user interface (Qt Quick)
+rgbeast/shaders/      gauges in GLSL
 helper/               privileged service, key rule and installer
 tests/                tests with simulated sysfs
 ```
 
 ## Contributing
 
-The most valuable thing right now: **try Rigcore on your laptop** and open an issue with your
+The most valuable thing right now: **try RGBEAST on your laptop** and open an issue with your
 model, distro and what works or doesn't (there's a *compatibility report* template). Run
-`python -m rigcore.hardware` and attach the output.
+`python -m rgbeast.hardware` and attach the output.
 
 ## License
 
