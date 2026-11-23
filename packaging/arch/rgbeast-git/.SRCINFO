@@ -1,6 +1,6 @@
 pkgbase = rgbeast-git
 	pkgdesc = Control center for gaming laptops: temperatures, fans, performance modes, battery, lighting and game profiles (git version)
-	pkgver = 0.2.0.r0.g0000000
+	pkgver = 0.2.1.r0.g0000000
 	pkgrel = 1
 	url = https://github.com/bernaljeanp/rgbeast
 	install = rgbeast.install
